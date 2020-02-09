@@ -14,13 +14,13 @@ set(CMAKE_OBJCOPY avr-objcopy)
 set(AVR_WARNINGLEVEL "-Wall -Wextra ")
 set(GENERAL_FLAGS "-MMD -D__PROG_TYPES_COMPAT__")
 set(AVR_328p_FLAGS "-mmcu=atmega328p -DF_CPU=16000000L -D__AVR_ATmega328P__")
-set(OPTIMIZATION_OPTIONS "-ffunction-sections -fdata-sections -Os -flto ")
+set(OPTIMIZATION_OPTIONS "-ffunction-sections -fdata-sections -O2 -flto ")
 set(LINKER_FLAGS "-Wl,-Map=output.map -Wl,--gc-sections,--relax -u _printf_float -lm -flto -ffreestanding -fpack-struct -fno-split-wide-types")
 
 #set(CMAKE_EXE_LINKER_FLAGS "-specs=nosys.specs -T ${PROJECT_SOURCE_DIR}/STM32F412CGUx_FLASH.ld")
 
 set(CMAKE_C_FLAGS "${AVR_WARNINGLEVEL} ${GENERAL_FLAGS} ${AVR_328p_FLAGS} ${OPTIMIZATION_OPTIONS}")
-set(CMAKE_CXX_FLAGS "-std=c++17 -fno-threadsafe-statics ${CMAKE_C_FLAGS}")
+set(CMAKE_CXX_FLAGS "-std=c++17 -pedantic -fno-threadsafe-statics ${CMAKE_C_FLAGS}")
 #set(CMAKE_ASM_FLAGS
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

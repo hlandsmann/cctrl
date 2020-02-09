@@ -53,21 +53,8 @@ uint8_t Serial::tx(const uint8_t* first, const uint8_t* last) {
     if (first == last) /*nothing to copy */
         return 0;
 
-    bufIterator temp_it_txRead;
-    { /* because of a possible race condition, clear interrupts, and safe read tx iterator in
-         a temporary */
-        utl::ClearInterrupts clear;
-        temp_it_txRead = it_txRead;
-    }
-    /* test whether there is enough space left in tx_buffer for transmission */
     uint8_t spaceNeeded = utl::distance(first, last);
-    uint8_t spaceLeft   = 0;
-
-    if ((0 == (UCSR0B & (1 << UDRIE0))) && temp_it_txRead == it_txWrite)
-        spaceLeft = utl::size(tx_buffer);
-    else
-        spaceLeft = utl::distance(utl::CycleIt(tx_buffer, it_txWrite),
-                                  utl::CycleIt(tx_buffer, temp_it_txRead));
+    uint8_t spaceLeft   = tx_spaceLeft();
 
     if (spaceNeeded > spaceLeft)
         return 0;
@@ -81,6 +68,18 @@ uint8_t Serial::tx(const uint8_t* first, const uint8_t* last) {
     }
     UCSR0B |= (1 << UDRIE0);  // start streaming Tx
     return spaceNeeded;
+}
+
+uint8_t Serial::tx_spaceLeft() {
+    bufIterator temp_it_txRead;
+    { /* because of a possible race condition, clear interrupts, and safe read tx iterator in
+         a temporary */
+        utl::ClearInterrupts clear;
+        temp_it_txRead = it_txRead;
+    }
+    if ((0 == (UCSR0B & (1 << UDRIE0))) && temp_it_txRead == it_txWrite)
+        return utl::size(tx_buffer);
+    return utl::distance(utl::CycleIt(tx_buffer, it_txWrite), utl::CycleIt(tx_buffer, temp_it_txRead));
 }
 
 ISR(USART_UDRE_vect) {

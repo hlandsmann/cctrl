@@ -13,6 +13,7 @@ public:
     }
     static uint8_t tx(const char* first, const char* last);
     static uint8_t tx(const uint8_t* first, const uint8_t* last);
+    static uint8_t tx_spaceLeft();
 
 private:
     constexpr static uint32_t baudrate = 115200;

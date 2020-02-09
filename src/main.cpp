@@ -82,7 +82,7 @@ ISR(TIMER0_COMPA_vect) {
 //     // PORTB &= ~val;
 // }
 // int main() __attribute__((noreturn));
-[[noreturn]] int main() {
+int main() {
     timer0_init();
     Serial::init();
     Serial::tx("123456789 123456789 123456789 123456789 123456789 123456789x\n\r");

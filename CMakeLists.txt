@@ -48,7 +48,10 @@ set(PROJECT_INCLUDES " ${PROJECT_SOURCE_DIR}/src")
 
 include_directories(${GCC_INCLUDES} ${PROJECT_INCLUDES})
 
-add_executable(${BUILD_TARGET_ELF} src/main.cpp src/serial.cpp)
+add_executable(${BUILD_TARGET_ELF} src/main.cpp
+                                   src/memman.cpp
+                                   src/serial.cpp
+                                   )
 target_link_libraries(${BUILD_TARGET_ELF} "${LINKER_FLAGS}")
 
 add_custom_target(${BUILD_TARGET_BIN} ALL DEPENDS ${BUILD_TARGET_ELF})

@@ -13,11 +13,11 @@ static uint8_t rx_buffer[64];
 
 using bufIterator = uint8_t*;
 
-static volatile bufIterator it_txRead  = utl::begin(tx_buffer);
-static volatile bufIterator it_txWrite = utl::begin(tx_buffer);
+static bufIterator it_txRead  = utl::begin(tx_buffer);
+static bufIterator it_txWrite = utl::begin(tx_buffer);
 
-static volatile bufIterator it_rxRead  = utl::begin(rx_buffer);
-static volatile bufIterator it_rxWrite = utl::begin(rx_buffer);
+static bufIterator it_rxRead  = utl::begin(rx_buffer);
+static bufIterator it_rxWrite = utl::begin(rx_buffer);
 
 void Serial::init() {
     // Set baud rate
@@ -43,13 +43,13 @@ void Serial::init() {
     UCSR0B |= 1 << RXCIE0;
 }
 
-uint8_t Serial::tx(const char* first, const char* last) {
+uint8_t Serial::tx(const char* first, const char* last, bool progmem) {
     const uint8_t* uint8_first = reinterpret_cast<const uint8_t*>(first);
     const uint8_t* uint8_last  = reinterpret_cast<const uint8_t*>(last);
-    return tx(uint8_first, uint8_last);
+    return tx(uint8_first, uint8_last, progmem);
 }
 
-uint8_t Serial::tx(const uint8_t* first, const uint8_t* last) {
+uint8_t Serial::tx(const uint8_t* first, const uint8_t* last, bool progmem) {
     if (first == last) /*nothing to copy */
         return 0;
 
@@ -59,7 +59,11 @@ uint8_t Serial::tx(const uint8_t* first, const uint8_t* last) {
     if (spaceNeeded > spaceLeft)
         return 0;
 
-    bufIterator new_it_txWrite = utl::copy(first, last, utl::CycleIt(tx_buffer, it_txWrite)).get();
+    bufIterator new_it_txWrite;
+    if (progmem)
+        new_it_txWrite = utl::copy_p(first, last, utl::CycleIt(tx_buffer, it_txWrite)).get();
+    else
+        new_it_txWrite = utl::copy(first, last, utl::CycleIt(tx_buffer, it_txWrite)).get();
 
     /* update it_txWrite atomically */
     {

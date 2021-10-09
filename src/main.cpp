@@ -1,5 +1,6 @@
 #include <avr/interrupt.h>
 #include <avr/io.h>
+#include <avr/pgmspace.h>
 #include <avr/wdt.h>
 #include "serial.h"
 #include "utl/execution.h"
@@ -16,10 +17,10 @@ extern void serial_init();
 extern void serial_write(uint8_t data);
 
 void timer0_init() {
-    constexpr uint8_t pre0    = (0 << CS02) | (0 << CS01) | (1 << CS00);
-    constexpr uint8_t pre8    = (0 << CS02) | (1 << CS01) | (0 << CS00);
-    constexpr uint8_t pre64   = (0 << CS02) | (1 << CS01) | (1 << CS00);
-    constexpr uint8_t pre256  = (1 << CS02) | (0 << CS01) | (0 << CS00);
+    // constexpr uint8_t pre0    = (0 << CS02) | (0 << CS01) | (1 << CS00);
+    // constexpr uint8_t pre8    = (0 << CS02) | (1 << CS01) | (0 << CS00);
+    // constexpr uint8_t pre64   = (0 << CS02) | (1 << CS01) | (1 << CS00);
+    // constexpr uint8_t pre256  = (1 << CS02) | (0 << CS01) | (0 << CS00);
     constexpr uint8_t pre1024 = (1 << CS02) | (0 << CS01) | (1 << CS00);
 
     utl::ClearInterrupts clear;
@@ -64,7 +65,7 @@ void toggle() {
 }
 
 ISR(TIMER0_COMPA_vect) {
-    constexpr uint8_t val = 0x20;
+    // constexpr uint8_t val = 0x20;
     // toggle();
 
     // if (i < 127)
@@ -82,17 +83,74 @@ ISR(TIMER0_COMPA_vect) {
 //     // PORTB &= ~val;
 // }
 // int main() __attribute__((noreturn));
+
+struct astring {
+    char  string[4];
+    char *begin = utl::begin(string);
+    char *end   = utl::end(string);
+};
+
+astring itoa(uint16_t value) {
+    auto toHexSingleVal = [](uint8_t in) -> char {
+        if (in < 10)
+            return '0' + in;
+        else
+            return 'a' + (in - 10);
+    };
+    astring  hex;
+    uint16_t mask = 0xF000;
+
+    for (auto &character : hex.string) {
+        character = toHexSingleVal((value & mask) >> 12);
+        value     = value << 4;
+    }
+    return hex;
+}
+typedef unsigned int LinkScriptValue;
+
+extern "C" LinkScriptValue __data_start;
+extern "C" LinkScriptValue __data_end;
+extern "C" LinkScriptValue __bss_start;
+extern "C" LinkScriptValue __bss_end;
+extern "C" LinkScriptValue __heap_start;
+extern "C" LinkScriptValue __heap_end;
+extern "C" LinkScriptValue __DATA_REGION_LENGTH__;
+
+
+
+extern void *              __brkval;
+
 int main() {
     timer0_init();
     Serial::init();
-    Serial::tx("123456789 123456789 123456789 123456789 123456789 123456789x\n\r");
-    Serial::tx("Hello World\n\r");
-    while (!Serial::tx("Test the World\n\r"))
+    static const char myString[] PROGMEM = "Hallo du da\n\r";
+    // Serial::tx("123456789 123456789 123456789 123456789 123456789 123456789x\n\r");
+    Serial::tx("\n\r\n\r");
+    Serial::tx_p(myString);
+    Serial::tx(myString);
+    Serial::tx("\n\rbss_start: ");
+    Serial::tx(itoa(reinterpret_cast<uint16_t>(&__bss_start)).string);
+    Serial::tx("\n\rheap_start: ");
+    Serial::tx(itoa(reinterpret_cast<uint16_t>(&__heap_start)).string);
+    while (Serial::tx_spaceLeft() < 60)
         ;
+    Serial::tx("\n\rdata_start: ");
+    Serial::tx(itoa(reinterpret_cast<uint16_t>(&__data_start)).string);
+    while (Serial::tx_spaceLeft() < 60)
+        ;
+
+    Serial::tx("\n\rdata length: ");
+    Serial::tx(itoa(reinterpret_cast<uint16_t>(&__DATA_REGION_LENGTH__)).string);
+    Serial::tx("\n\r");
+    Serial::tx("\n\rbrkval: ");
+    Serial::tx(itoa(reinterpret_cast<uint16_t>(__brkval)).string);
+    Serial::tx("\n\r");    // while (!Serial::tx("Test the World\n\r"))
+    //     ;
 
     constexpr uint8_t val = 0x20;
     DDRB |= val;
-    while (1) {
+
+    while (true) {
         wdt_reset();
         // toggle();
         // if(TCNT0>250){
@@ -100,4 +158,5 @@ int main() {
         //     TCNT0 = 0;
         // }
     }
+    return 0;
 }

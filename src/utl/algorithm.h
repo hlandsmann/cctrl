@@ -1,9 +1,20 @@
 #pragma once
 #include <string.h>
+#include <avr/pgmspace.h>
 namespace utl {
 template <class InputIt, class OutputIt> auto copy(InputIt first, InputIt last, OutputIt d_first) {
     while (first != last) {
         *d_first++ = *first++;
+    }
+    return d_first;
+}
+
+template <class InputIt, class OutputIt> auto copy_p(InputIt first, InputIt last, OutputIt d_first) {
+    while (first != last) {
+        if constexpr (sizeof(*first) == 1)
+            *d_first++ = pgm_read_byte(first++);
+        else
+            static_assert(sizeof(*first) == 1);
     }
     return d_first;
 }

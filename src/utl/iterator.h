@@ -5,26 +5,28 @@ template <class Container, class InputIt> class CycleIt {
 public:
     CycleIt(Container& buffer, InputIt startIt) : buffer(buffer), workIt(startIt) {}
     virtual ~CycleIt() = default;
-    // CycleIt& operator=(const CycleIt& cycleIt) { ;
-    InputIt get() const { return workIt; }
 
-    CycleIt operator++(int) {
+    /* gcc can be stupid at times and generate bad code if it chooses - for whatever reason - not to
+     * inline this (verified with compiler explorer). Force inline */
+    __attribute__((always_inline)) InputIt get() const { return workIt; }
+
+    __attribute__((always_inline)) CycleIt operator++(int) {
         CycleIt temp = *this;
         ++*this;
         return temp;
     }
-    CycleIt& operator++() {
+    __attribute__((always_inline)) CycleIt& operator++() {
         if (++workIt == utl::end(buffer))
             workIt = utl::begin(buffer);
         return *this;
     }
-    size_t operator-(const CycleIt& rhs) {
+    __attribute__((always_inline)) size_t operator-(const CycleIt& rhs) {
         if (workIt >= rhs.workIt)
             return (workIt - rhs.workIt);
         else
             return (utl::size(buffer) - (rhs.workIt - workIt));
     }
-    auto& operator*() const { return *workIt; }
+    __attribute__((always_inline)) auto& operator*() const { return *workIt; }
 
 protected:
     Container& buffer;

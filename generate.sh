@@ -13,4 +13,3 @@ cmake -B $build_dir \
     -DCMAKE_TOOLCHAIN_FILE=$toolchain_file \
     -DCMAKE_BUILD_TYPE=$mode
 (cd $build_dir; make -j$(nproc))
-#(cd $build_dir; avr-size --format=berkeley cctrl.elf)

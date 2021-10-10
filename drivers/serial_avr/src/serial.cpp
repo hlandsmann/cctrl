@@ -1,4 +1,4 @@
-#include "serial.h"
+#include <serial.h>
 #include <stdint.h>
 
 #include <avr/interrupt.h>
@@ -25,10 +25,10 @@ void Serial::init() {
     int      multiplier;
     if constexpr (baudrate < 57600) {
         multiplier = 8;
-        UCSR0A &= ~(1 << U2X0);  // disable double baudrate bit
+        UCSR0A     = UCSR0A & ~(1 << U2X0);  // disable double baudrate bit
     } else {
         multiplier = 4;
-        UCSR0A |= (1 << U2X0);  // enable double baudrate bit
+        UCSR0A     = UCSR0A | (1 << U2X0);  // enable double baudrate bit
     }
     UBRR0_value = (((F_CPU / (multiplier * baudrate)) - 1) / 2);
 
@@ -36,11 +36,11 @@ void Serial::init() {
     UBRR0L = UBRR0_value;
 
     // enable rx and tx
-    UCSR0B |= 1 << RXEN0;
-    UCSR0B |= 1 << TXEN0;
+    UCSR0B = UCSR0B | 1 << RXEN0;
+    UCSR0B = UCSR0B | 1 << TXEN0;
 
     // enable interrupt on complete reception of a byte
-    UCSR0B |= 1 << RXCIE0;
+    UCSR0B = UCSR0B | 1 << RXCIE0;
 }
 
 uint8_t Serial::tx(const char* first, const char* last, bool progmem) {
@@ -70,7 +70,7 @@ uint8_t Serial::tx(const uint8_t* first, const uint8_t* last, bool progmem) {
         utl::ClearInterrupts clear;
         it_txWrite = new_it_txWrite;
     }
-    UCSR0B |= (1 << UDRIE0);  // start streaming Tx
+    UCSR0B = UCSR0B | (1 << UDRIE0);  // start streaming Tx
     return spaceNeeded;
 }
 
@@ -91,7 +91,7 @@ ISR(USART_UDRE_vect) {
     it_txRead = (++utl::CycleIt(tx_buffer, it_txRead)).get();
 
     if (it_txRead == it_txWrite)
-        UCSR0B &= ~(1 << UDRIE0);  // stop streaming Tx
+        UCSR0B = UCSR0B & ~(1 << UDRIE0);  // stop streaming Tx
 }
 
 ISR(USART_RX_vect) {
@@ -100,5 +100,5 @@ ISR(USART_RX_vect) {
     it_rxWrite = (++utl::CycleIt(rx_buffer, it_rxWrite)).get();
 
     if (it_rxWrite == it_rxRead)
-        UCSR0B &= ~(1 << RXCIE0);  // stop streaming Rx
+        UCSR0B = UCSR0B & ~(1 << RXCIE0);  // stop streaming Rx
 }

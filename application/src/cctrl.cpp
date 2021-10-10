@@ -2,8 +2,9 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/wdt.h>
-#include "serial.h"
-#include "utl/execution.h"
+
+#include <serial/serial.h>
+#include <utl/execution.h>
 void delayAbit() {
     for (int i = 0; i < 255; i++) {
         while (TCNT0 < 250)
@@ -36,13 +37,13 @@ void timer0_init() {
     OCR0A = 254;  // = (16*10^6) / (2000*64) - 1 (must be <256)
 
     // turn on CTC mode
-    TCCR0A |= (1 << WGM01);
+    TCCR0A = TCCR0A | (1 << WGM01);
     // Set CS01 and CS00 bits for 64 prescaler
-    TCCR0B |= pre1024;
+    TCCR0B =  TCCR0B | pre1024;
     // TCCR0B |= (1 << CS01);
 
     // enable timer compare interrupt
-    TIMSK0 |= (1 << OCIE0A);
+    TIMSK0 = TIMSK0 | (1 << OCIE0A);
     // sei();
 
     // set up timer with prescaler = 256
@@ -61,7 +62,7 @@ void timer0_init() {
 void toggle() {
     constexpr uint8_t val = 0x20;
 
-    PORTB ^= val;
+    PORTB = PORTB ^ val;
 }
 
 ISR(TIMER0_COMPA_vect) {
@@ -148,7 +149,7 @@ int main() {
     //     ;
 
     constexpr uint8_t val = 0x20;
-    DDRB |= val;
+    DDRB = DDRB | val;
 
     while (true) {
         wdt_reset();

@@ -3,8 +3,11 @@
 #include <avr/pgmspace.h>
 #include <avr/wdt.h>
 
+#include <memman/memman.h>
 #include <serial/serial.h>
 #include <utl/execution.h>
+
+
 void delayAbit() {
     for (int i = 0; i < 255; i++) {
         while (TCNT0 < 250)
@@ -39,7 +42,7 @@ void timer0_init() {
     // turn on CTC mode
     TCCR0A = TCCR0A | (1 << WGM01);
     // Set CS01 and CS00 bits for 64 prescaler
-    TCCR0B =  TCCR0B | pre1024;
+    TCCR0B = TCCR0B | pre1024;
     // TCCR0B |= (1 << CS01);
 
     // enable timer compare interrupt
@@ -86,9 +89,9 @@ ISR(TIMER0_COMPA_vect) {
 // int main() __attribute__((noreturn));
 
 struct astring {
-    char  string[4];
+    char string[4];
     char *begin = utl::begin(string);
-    char *end   = utl::end(string);
+    char *end = utl::end(string);
 };
 
 astring itoa(uint16_t value) {
@@ -98,55 +101,57 @@ astring itoa(uint16_t value) {
         else
             return 'a' + (in - 10);
     };
-    astring  hex;
+    astring hex;
     uint16_t mask = 0xF000;
 
     for (auto &character : hex.string) {
         character = toHexSingleVal((value & mask) >> 12);
-        value     = value << 4;
+        value = value << 4;
     }
     return hex;
 }
-typedef unsigned int LinkScriptValue;
 
-extern "C" LinkScriptValue __data_start;
-extern "C" LinkScriptValue __data_end;
-extern "C" LinkScriptValue __bss_start;
-extern "C" LinkScriptValue __bss_end;
-extern "C" LinkScriptValue __heap_start;
-extern "C" LinkScriptValue __heap_end;
-extern "C" LinkScriptValue __DATA_REGION_LENGTH__;
+extern void *__brkval;
+// # define F(s) (__extension__({static const char __c[15] PROGMEM = (s); reinterpret_cast<const
+// char[15]>( __c);}))
 
+template <size_t N> constexpr auto F(const char (&str)[N]) -> const char * { return str; }
 
+template <size_t N> struct str_test {
+    explicit consteval str_test(const char (&str)[N]) {
+        for (size_t i = 0; i < N - 1; i++)
+            string[i] = str[i];
+    };
+    char string[N - 1];
+};
 
-extern void *              __brkval;
+#define log(str)                                               \
+    []() {                                                     \
+        static const str_test log_str PROGMEM = str_test(str); \
+        Serial::tx_p(log_str.string);                          \
+    }()
 
 int main() {
     timer0_init();
     Serial::init();
-    static const char myString[] PROGMEM = "Hallo du da\n\r";
-    // Serial::tx("123456789 123456789 123456789 123456789 123456789 123456789x\n\r");
-    Serial::tx("\n\r\n\r");
-    Serial::tx_p(myString);
-    Serial::tx(myString);
-    Serial::tx("\n\rbss_start: ");
-    Serial::tx(itoa(reinterpret_cast<uint16_t>(&__bss_start)).string);
-    Serial::tx("\n\rheap_start: ");
-    Serial::tx(itoa(reinterpret_cast<uint16_t>(&__heap_start)).string);
-    while (Serial::tx_spaceLeft() < 60)
-        ;
-    Serial::tx("\n\rdata_start: ");
-    Serial::tx(itoa(reinterpret_cast<uint16_t>(&__data_start)).string);
-    while (Serial::tx_spaceLeft() < 60)
-        ;
 
-    Serial::tx("\n\rdata length: ");
-    Serial::tx(itoa(reinterpret_cast<uint16_t>(&__DATA_REGION_LENGTH__)).string);
-    Serial::tx("\n\r");
-    Serial::tx("\n\rbrkval: ");
-    Serial::tx(itoa(reinterpret_cast<uint16_t>(__brkval)).string);
-    Serial::tx("\n\r");    // while (!Serial::tx("Test the World\n\r"))
-    //     ;
+    memman::initMemory();
+
+    log("\n\r\n\r");
+    while (Serial::tx_spaceLeft() < 60)
+        ;
+    log("Hello World\n\r");
+
+    for (int i = 0; i < 256; i++) {
+        while (Serial::tx_spaceLeft() < 60)
+            ;
+        log("\n\rPtr: ");
+        uint16_t *ptr = new uint16_t[10];
+        if (ptr != nullptr)
+            Serial::tx(itoa(reinterpret_cast<uint16_t>(ptr)).string);
+        else
+            break;
+    }
 
     constexpr uint8_t val = 0x20;
     DDRB = DDRB | val;

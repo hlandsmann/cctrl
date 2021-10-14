@@ -7,8 +7,9 @@ build_dir=$workspace/build
 mkdir -p $build_dir
 
 toolchain_file=$workspace/cmake/toolchain_avr_m328p.cmake
-#mode="Release"
+mode="Release"
 mode="Debug"
+mode="MINSIZEREL"
 cmake -B $build_dir \
     -DCMAKE_TOOLCHAIN_FILE=$toolchain_file \
     -DCMAKE_BUILD_TYPE=$mode

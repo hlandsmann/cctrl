@@ -1,8 +1,13 @@
 project(serial)
 
-set(serial_srcs src/serial.cpp)
-set(serial_hdrs include/serial/serial.h)
-add_library(serial ${serial_srcs} ${serial_hdrs})
+add_library(serial STATIC)
+target_sources(serial
+    PRIVATE
+        src/serial.cpp
+    PUBLIC
+        include/serial/serial.h
+)
+
 target_include_directories(
     serial
     PRIVATE

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.21)
 project(cctrl)
 set(CMAKE_SYSTEM_VERSION 1)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -13,6 +13,7 @@ add_subdirectory(application)
 add_subdirectory(cmake/cctrl_warnings)
 add_subdirectory(drivers)
 add_subdirectory(libraries)
+add_subdirectory(third_party)
 
 include(${CMAKE_SOURCE_DIR}/cmake/set_link_options_for_targets.cmake)
 

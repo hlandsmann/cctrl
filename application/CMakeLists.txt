@@ -1,6 +1,9 @@
-set(application_srcs src/cctrl.cpp)
 
-add_executable(cctrl.elf ${application_srcs})
+add_executable(cctrl.elf)
+target_sources(cctrl.elf
+    PRIVATE
+        src/cctrl.cpp
+)
 target_link_libraries(
     cctrl.elf
     PRIVATE
@@ -8,6 +11,8 @@ target_link_libraries(
         utl
         serial
         memman
+        gcc-std::std
+
 )
 target_compile_features(cctrl.elf PRIVATE cxx_std_20)
 

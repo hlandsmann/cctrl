@@ -6,7 +6,7 @@ set(utl_headers include/utl/algorithm.h
 )
 
 add_library(utl INTERFACE)
-
+add_library(utl::utl ALIAS utl)
 target_include_directories(
     utl
     INTERFACE

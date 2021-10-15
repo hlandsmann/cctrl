@@ -1,3 +1,6 @@
 [submodule "third_party/umm_malloc"]
 	path = third_party/umm_malloc
 	url = git@github.com:hlandsmann/umm_malloc.git
+[submodule "third_party/avr-libstdcpp-v3"]
+	path = third_party/avr-libstdcpp-v3
+	url = git@github.com:hlandsmann/avr-libstdcpp-v3.git

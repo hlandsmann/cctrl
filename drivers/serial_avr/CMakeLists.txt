@@ -1,6 +1,7 @@
 project(serial)
 
 add_library(serial STATIC)
+add_library(serial::serial ALIAS serial)
 target_sources(serial
     PRIVATE
         src/serial.cpp

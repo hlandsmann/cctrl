@@ -8,10 +8,9 @@ target_link_libraries(
     cctrl.elf
     PRIVATE
         ${CMAKE_PROJECT_NAME}_warnings
-        utl
-        serial
-        memman
-        gcc-std::std
+        utl::utl
+        serial::serial
+        memman::memman
 
 )
 target_compile_features(cctrl.elf PRIVATE cxx_std_20)

@@ -83,7 +83,8 @@
 			"hash_map": "cpp",
 			"charconv": "cpp",
 			"variant": "cpp",
-			"bit": "cpp"
+			"bit": "cpp",
+			"concepts": "cpp"
 		}
 	}
 }

@@ -7,28 +7,29 @@
 #include <utl/execution.h>
 #include <utl/iterator.h>
 #include <utl/memory.h>
+#include <algorithm>
 
 static uint8_t tx_buffer[64];
 static uint8_t rx_buffer[64];
 
 using bufIterator = uint8_t*;
 
-static bufIterator it_txRead  = utl::begin(tx_buffer);
+static bufIterator it_txRead = utl::begin(tx_buffer);
 static bufIterator it_txWrite = utl::begin(tx_buffer);
 
-static bufIterator it_rxRead  = utl::begin(rx_buffer);
+static bufIterator it_rxRead = utl::begin(rx_buffer);
 static bufIterator it_rxWrite = utl::begin(rx_buffer);
 
 void Serial::init() {
     // Set baud rate
     uint16_t UBRR0_value;
-    int      multiplier;
+    int multiplier;
     if constexpr (baudrate < 57600) {
         multiplier = 8;
-        UCSR0A     = UCSR0A & ~(1 << U2X0);  // disable double baudrate bit
+        UCSR0A = UCSR0A & ~(1 << U2X0);  // disable double baudrate bit
     } else {
         multiplier = 4;
-        UCSR0A     = UCSR0A | (1 << U2X0);  // enable double baudrate bit
+        UCSR0A = UCSR0A | (1 << U2X0);  // enable double baudrate bit
     }
     UBRR0_value = (((F_CPU / (multiplier * baudrate)) - 1) / 2);
 
@@ -43,18 +44,18 @@ void Serial::init() {
     UCSR0B = UCSR0B | 1 << RXCIE0;
 }
 
-uint8_t Serial::tx(const char* first, const char* last, bool progmem) {
+auto Serial::tx(const char* first, const char* last, bool progmem) -> uint8_t {
     const uint8_t* uint8_first = reinterpret_cast<const uint8_t*>(first);
-    const uint8_t* uint8_last  = reinterpret_cast<const uint8_t*>(last);
+    const uint8_t* uint8_last = reinterpret_cast<const uint8_t*>(last);
     return tx(uint8_first, uint8_last, progmem);
 }
 
-uint8_t Serial::tx(const uint8_t* first, const uint8_t* last, bool progmem) {
+auto Serial::tx(const uint8_t* first, const uint8_t* last, bool progmem) -> uint8_t {
     if (first == last) /*nothing to copy */
         return 0;
 
     uint8_t spaceNeeded = utl::distance(first, last);
-    uint8_t spaceLeft   = tx_spaceLeft();
+    uint8_t spaceLeft = tx_spaceLeft();
 
     if (spaceNeeded > spaceLeft)
         return 0;
@@ -63,7 +64,10 @@ uint8_t Serial::tx(const uint8_t* first, const uint8_t* last, bool progmem) {
     if (progmem)
         new_it_txWrite = utl::copy_p(first, last, utl::CycleIt(tx_buffer, it_txWrite)).get();
     else
-        new_it_txWrite = utl::copy(first, last, utl::CycleIt(tx_buffer, it_txWrite)).get();
+        new_it_txWrite =
+            std::copy_if(first, last, utl::CycleIt(tx_buffer, it_txWrite), [](auto character) {
+                return character != 0;
+            }).get();
 
     /* update it_txWrite atomically */
     {
@@ -74,7 +78,7 @@ uint8_t Serial::tx(const uint8_t* first, const uint8_t* last, bool progmem) {
     return spaceNeeded;
 }
 
-uint8_t Serial::tx_spaceLeft() {
+auto Serial::tx_spaceLeft() -> uint8_t {
     bufIterator temp_it_txRead;
     { /* because of a possible race condition, clear interrupts, and safe read tx iterator in
          a temporary */
@@ -87,7 +91,7 @@ uint8_t Serial::tx_spaceLeft() {
 }
 
 ISR(USART_UDRE_vect) {
-    UDR0      = *it_txRead;
+    UDR0 = *it_txRead;
     it_txRead = (++utl::CycleIt(tx_buffer, it_txRead)).get();
 
     if (it_txRead == it_txWrite)

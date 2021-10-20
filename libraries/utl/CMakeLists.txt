@@ -13,6 +13,7 @@ target_compile_features(utl
 target_sources(utl
     INTERFACE
         include/utl/algorithm.h
+        include/utl/array.h
         include/utl/execution.h
         include/utl/iterator.h
         include/utl/memory.h

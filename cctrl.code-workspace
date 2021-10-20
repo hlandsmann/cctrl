@@ -84,7 +84,14 @@
 			"charconv": "cpp",
 			"variant": "cpp",
 			"bit": "cpp",
-			"concepts": "cpp"
+			"concepts": "cpp",
+			"compare": "cpp",
+			"coroutine": "cpp",
+			"netfwd": "cpp",
+			"numbers": "cpp",
+			"ranges": "cpp",
+			"semaphore": "cpp",
+			"stop_token": "cpp"
 		}
 	}
 }

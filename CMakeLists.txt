@@ -1,29 +1,26 @@
 cmake_minimum_required(VERSION 3.21)
+include(${CMAKE_SOURCE_DIR}/cmake/set_link_options_for_targets.cmake)
+
 project(cctrl)
 set(CMAKE_SYSTEM_VERSION 1)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-#set(UNUSED_OPTION "-x assembler-with-cpp -fno-devirtualize")
-
-
-set(GCC_INCLUDES "/usr/avr/include")
-set(PROJECT_INCLUDES " ${PROJECT_SOURCE_DIR}/src")
-
+if (NOT MOCKUP)
+message(WARNING "not mockup")
 add_subdirectory(application)
 add_subdirectory(cmake/cctrl_warnings)
 add_subdirectory(drivers)
 add_subdirectory(libraries)
 add_subdirectory(third_party)
+set_link_options_for_all_targets()
 
-include(${CMAKE_SOURCE_DIR}/cmake/set_link_options_for_targets.cmake)
+endif (NOT MOCKUP)
 
-add_custom_target(
-    flashbin
-    COMMAND
-        /usr/bin/avrdude -q -V -p atmega328p
-        -C /etc/avrdude.conf -D -c arduino
-        -b 115200 -P /dev/ttyACM0
-		-U flash:w:$<TARGET_PROPERTY:cctrl.hex,OUTPUT_FILE>:i
-    DEBENDS
-        cctrl.hex
-)
+if (MOCKUP)
+add_subdirectory(mockup)
+add_subdirectory(cmake/cctrl_warnings)
+add_subdirectory(libraries/utl)
+add_subdirectory(drivers/mock/serial)
+
+endif(MOCKUP)
+include(${CMAKE_SOURCE_DIR}/cmake/compile_commands_always.cmake)

@@ -1,10 +1,17 @@
 set(CMAKE_SYSTEM_NAME Generic)
-set(CMAKE_SYSTEM_PROCESSOR cortex-a9)
 
-set(CMAKE_C_COMPILER  avr-gcc)
-set(CMAKE_CXX_COMPILER avr-g++)
-set(CMAKE_ASM_COMPILER avr-gcc)
-set(CMAKE_OBJCOPY avr-objcopy)
+find_program(CMAKE_ASM_COMPILER avr-gcc)
+find_program(CMAKE_CXX_COMPILER avr-g++)
+find_program(CMAKE_C_COMPILER avr-gcc)
+find_program(CMAKE_AR avr-ar)
+find_program(CMAKE_STRIP avr-strip)
+find_program(CMAKE_OBJCOPY avr-objcopy)
+find_program(CMAKE_OBJDUMP avr-objdump)
+find_program(AVRSIZE avr-size)
+find_program(AVRDUDE avrdude)
+
+#ToDo: putting the avr includes that way, is probably not the best solution...
+set(AVR_INCLUDES "-I/usr/avr/include")
 
 set(GENERAL_FLAGS "-MMD -D__PROG_TYPES_COMPAT__")
 set(ARCHITECTURE_FLAGS "-mmcu=atmega328p -DF_CPU=16000000L -D__AVR_ATmega328P__")
@@ -19,7 +26,7 @@ string(CONCAT COMPILER_FLAGS_INIT
        " ${OPTIMIZATION_OPTIONS}"
 )
 
-set(CMAKE_C_FLAGS_INIT "${COMPILER_FLAGS_INIT}")
+set(CMAKE_C_FLAGS_INIT "${COMPILER_FLAGS_INIT} ${AVR_INCLUDES}")
 set(CMAKE_CXX_FLAGS_INIT "-fno-threadsafe-statics ${CMAKE_C_FLAGS_INIT}")
 
 set(CMAKE_C_FLAGS_DEBUG_INIT "-O1 -g3")

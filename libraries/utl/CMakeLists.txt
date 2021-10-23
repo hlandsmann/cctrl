@@ -18,7 +18,10 @@ target_sources(utl
         include/utl/iterator.h
         include/utl/memory.h
 )
+
+if (NOT MOCKUP)
 target_link_libraries(utl
     INTERFACE
         std-avr::std-avr
 )
+endif (NOT MOCKUP)

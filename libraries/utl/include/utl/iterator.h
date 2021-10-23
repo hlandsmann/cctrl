@@ -8,7 +8,7 @@ public:
 
     /* gcc can be stupid at times and generate bad code if it chooses - for whatever reason - not to
      * inline this (verified with compiler explorer). Force inline */
-    [[gnu::always_inline]] InputIt get() const { return workIt; }
+    [[gnu::always_inline]] [[nodiscard]] InputIt get() const { return workIt; }
 
     [[gnu::always_inline]] CycleIt operator++(int) {
         CycleIt temp = *this;
@@ -26,11 +26,11 @@ public:
         else
             return (utl::size(buffer) - (rhs.workIt - workIt));
     }
-    [[gnu::always_inline]] auto& operator*() const { return *workIt; }
+    [[gnu::always_inline]] [[nodiscard]] auto& operator*() const { return *workIt; }
 
 protected:
     Container& buffer;
-    InputIt    workIt;
+    InputIt workIt;
 };
 
 // template <class Container, class InputIt> class CycleIt_startFlag : public CycleIt<Container, InputIt>

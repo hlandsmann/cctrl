@@ -1,6 +1,6 @@
 #pragma once
 #include <array>
-#include <avr/pgmspace.h>
+#include <stddef.h>
 
 namespace utl {
 template <class T, size_t N> struct array : std::array<T, N> {};

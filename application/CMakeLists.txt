@@ -11,7 +11,7 @@ target_link_libraries(
         utl::utl
         serial::serial
         memman::memman
-
+        printf::printf
 )
 target_compile_features(cctrl.elf PRIVATE cxx_std_20)
 
@@ -32,8 +32,17 @@ set_target_properties(
 add_custom_target(
     print_size ALL
     COMMAND
-        avr-size --format=berkeley ${CMAKE_CURRENT_BINARY_DIR}/cctrl.elf
+        ${AVRSIZE} --format=berkeley ${CMAKE_CURRENT_BINARY_DIR}/cctrl.elf
     DEPENDS
         cctrl.elf
-        cctrl.hex
+)
+add_custom_target(
+    flashbin
+    COMMAND
+        ${AVRDUDE} -q -V -p atmega328p
+        -C /etc/avrdude.conf -D -c arduino
+        -b 115200 -P /dev/ttyACM0
+		-U flash:w:$<TARGET_PROPERTY:cctrl.hex,OUTPUT_FILE>:i
+    DEPENDS
+        cctrl.hex print_size
 )

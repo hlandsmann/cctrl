@@ -1,9 +1,8 @@
 {
     "configurations": [
         {
-            "name": "Linux",
+            "name": "AVR",
             "includePath": [
-                "${workspaceFolder}/src",
                 "/usr/avr/include"
             ],
             "defines": [
@@ -15,6 +14,20 @@
             "cppStandard": "c++20",
             "intelliSenseMode": "clang-x64",
             "compileCommands": "${workspaceFolder}/build/compile_commands.json"
+        },
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/avr/include"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c11",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "gcc-x64",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            "configurationProvider": "ms-vscode.cmake-tools"
         }
     ],
     "version": 4

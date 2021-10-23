@@ -3,6 +3,7 @@
 
 #include <avr/interrupt.h>
 #include <avr/io.h>
+#include <avr/pgmspace.h>
 #include <utl/algorithm.h>
 #include <utl/execution.h>
 #include <utl/iterator.h>
@@ -20,6 +21,17 @@ static bufIterator it_txWrite = utl::begin(tx_buffer);
 static bufIterator it_rxRead = utl::begin(rx_buffer);
 static bufIterator it_rxWrite = utl::begin(rx_buffer);
 
+namespace utl {
+template <class InputIt, class OutputIt> auto copy_p(InputIt first, InputIt last, OutputIt d_first) {
+    while (first != last) {
+        if constexpr (sizeof(*first) == 1)
+            *d_first++ = pgm_read_byte(first++);
+        else
+            static_assert(sizeof(*first) == 1);
+    }
+    return d_first;
+}
+}  // namespace utl
 void Serial::init() {
     // Set baud rate
     uint16_t UBRR0_value;
@@ -106,3 +118,5 @@ ISR(USART_RX_vect) {
     if (it_rxWrite == it_rxRead)
         UCSR0B = UCSR0B & ~(1 << RXCIE0);  // stop streaming Rx
 }
+
+extern "C" void _putchar(char character) { *utl::CycleIt(tx_buffer, it_txWrite)++ = character; }

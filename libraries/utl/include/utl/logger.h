@@ -252,9 +252,10 @@ void t(const std::array<char, N>& text, Args... args) {
     constexpr auto fmt_tuple = get_args<rawStr>();
     const auto arg_tuple = std::make_tuple(args...);
 
+    uint8_t print_text_from = 0;
     [&]<size_t... I>(std::index_sequence<I...>) {
         (
-            [&, print_text_from = unsigned(0)]() mutable {
+            [&]() {
                 constexpr auto fmt_now = std::get<I>(fmt_tuple);
                 constexpr size_t print_text_until = std::get<0>(fmt_now);
                 constexpr auto cmd = std::get<1>(fmt_now);
@@ -263,7 +264,7 @@ void t(const std::array<char, N>& text, Args... args) {
                 constexpr auto modi_seq = std::make_index_sequence<std::tuple_size_v<decltype(modi)>>();
 
                 static_assert(N >= print_text_until);
-                if  (print_text_until != 0 ) {
+                if constexpr (print_text_until != 0 ) {
                     Serial::tx(text.begin() + print_text_from, text.begin() + print_text_until, true);
                     print_text_from = print_text_until;
                 }

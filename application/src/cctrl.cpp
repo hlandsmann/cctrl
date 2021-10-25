@@ -29,6 +29,9 @@ int main() {
     print("\n\r");
     print("\n\r");
 
+    int *ptr = new int(2);
+    // int myvalue = 42;
+    print("val: \"{}\" bin: {:b}, dec: {:d}, {}\n\r", ptr, int(42), int(42), 2);
 
     for (int i = 0; i < 256; i++) {
         while (Serial::tx_spaceLeft() < 60)

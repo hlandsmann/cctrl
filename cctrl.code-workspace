@@ -92,7 +92,8 @@
 			"ranges": "cpp",
 			"semaphore": "cpp",
 			"stop_token": "cpp",
-			"hash_set": "cpp"
+			"hash_set": "cpp",
+			"span": "cpp"
 		}
 	}
 }

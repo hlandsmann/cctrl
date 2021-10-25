@@ -10,41 +10,34 @@
 #include <utl/logger.h>
 #include <algorithm>
 #include <ranges>
-#include <printf.h>
-
-
-
 
 int main() {
     Serial::init();
     memman::initMemory();
     static_assert(uint16_t(0x1010) == utl::BitPattern("---1------------"));
     print("\n\r");
-    // print("my interger {:d} - {:x} - {:o} \n\r", int8_t(-128), int16_t(-2210), uint8_t(8), uint16_t(16));
-    // printf("Hello World\n\r");
-    print("\n\r\n\r");
+
+    print("Hello World!\n\r");
+
+    print("Best Number: {}\n\r", 42);
+
+    // print("{}",42);
+    print("{:d}{}{}{}",42,42,42,42);
+
     while (Serial::tx_spaceLeft() < 60)
         ;
-    print("Hello World\n\r");
-    print("\n");
+    print("\n\r");
+    print("\n\r");
+
 
     for (int i = 0; i < 256; i++) {
         while (Serial::tx_spaceLeft() < 60)
             ;
-        print("\n\rPtr: ");
-       uint16_t *ptr = new uint16_t[10];
+        uint16_t *ptr = new uint16_t[10];
         if (ptr != nullptr) {
-            // Serial::tx(itoa(reinterpret_cast<uint16_t>(ptr)).string);
-            // using Base = utl::logger::Base;
-            // // Serial::tx(utl::logger::itoa<uint16_t, Base::hex>(reinterpret_cast<uint16_t>(ptr)));
-            // Serial::tx(utl::logger::itoa<decltype(ptr), Base::hex>(ptr));
-            // uint8_t test = 10;
-            // utl::logger::printSingleValue<uint8_t, Base::dec>(test);
-            // utl::logger::printSingleValue<uint8_t, Base::hex>(11);
-            // utl::logger::printSingleValue<int8_t, Base::hex>(12);
-            // utl::logger::printSingleValue<int16_t, Base::dec>(12);
-            // utl::logger::printSingleValue<uint16_t, Base::dec>(13);
-    } else
+            // print("\n\rPtr: {}", ptr);
+
+        } else
             break;
     }
 

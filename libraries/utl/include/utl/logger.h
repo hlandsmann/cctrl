@@ -248,7 +248,6 @@ template <std::array cmd, typename T> consteval auto parse_cmd() {
 
 template <std::array rawStr, size_t N, typename... Args>
 void t(const std::array<char, N>& text, Args... args) {
-    constexpr auto seq = std::make_index_sequence<sizeof...(Args)>();
     constexpr auto fmt_tuple = get_args<rawStr>();
     const auto arg_tuple = std::make_tuple(args...);
 
@@ -259,23 +258,24 @@ void t(const std::array<char, N>& text, Args... args) {
                 constexpr auto fmt_now = std::get<I>(fmt_tuple);
                 constexpr size_t print_text_until = std::get<0>(fmt_now);
                 constexpr auto cmd = std::get<1>(fmt_now);
-                using Type = typename std::decay_t<decltype(std::get<I>(std::make_tuple(args...)))>;
+                using Type = typename std::decay_t<decltype(std::get<I>(arg_tuple))>;
                 constexpr auto modi = parse_cmd<cmd, std::decay_t<decltype(std::get<I>(arg_tuple))>>();
-                constexpr auto modi_seq = std::make_index_sequence<std::tuple_size_v<decltype(modi)>>();
 
                 static_assert(N >= print_text_until);
                 if constexpr (print_text_until != 0 ) {
                     Serial::tx(text.begin() + print_text_from, text.begin() + print_text_until, true);
                     print_text_from = print_text_until;
                 }
+
                 [&]<size_t... J>(std::index_sequence<J...>) {
                     printSingleValue<Type, (std::get<J>(modi), ...)>(std::get<I>(arg_tuple));
                 }
-                (modi_seq);
+                (std::make_index_sequence<std::tuple_size_v<decltype(modi)>>());
             }(),
             ...);
     }
-    (seq);
+    (std::make_index_sequence<sizeof...(Args)>());
+
     if constexpr (sizeof...(Args) != 0) {
         constexpr size_t last_chunk_begin = std::get<0>(std::get<sizeof...(Args) - 1>(fmt_tuple));
         if constexpr (last_chunk_begin < N)
@@ -291,21 +291,6 @@ template <std::array format, typename... Args> void test_validity(Args...) {
 
 }  // namespace utl
 
-/*
-#define print(format, ...)                                                                 \
-    [&]() {                                                                                \
-        namespace logger = utl::logger;                                                    \
-        using Base = utl::logger::Base;                                                    \
-        const auto arg_tuple = std::make_tuple(__VA_ARGS__);                               \
-        constexpr std::string_view format_str = format;                                    \
-        auto fff = logger::t<logger::rawFormatString(format)>(__VA_ARGS__);                \
-        std::apply(                                                                        \
-            [](auto... value) {                                                            \
-                ((utl::logger::printSingleValue<decltype(value), Base::dec>(value)), ...); \
-            },                                                                             \
-            arg_tuple);                                                                    \
-    }()
- */
 #define VA_ARGS(...) , ##__VA_ARGS__
 #define print(format, ...)                                                      \
     [&] {                                                                       \

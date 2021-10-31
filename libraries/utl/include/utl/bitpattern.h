@@ -1,5 +1,7 @@
 #pragma once
 
+// This header was 'borrowed' from <<C++ weekly with json turner>> and adapted somewhat to fit my needs
+
 #include <cstdint>
 #include <type_traits>
 
@@ -37,7 +39,7 @@ public:
                 //=110101 // new mask, with cur_bit cleared from it
                 mask &= ~cur_bit;
             } else {
-                using error_message = const char [];
+                using error_message = const char[];
                 new error_message("Unknown characters in BitPattern input");
             }
 

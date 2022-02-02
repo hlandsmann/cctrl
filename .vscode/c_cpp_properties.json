@@ -9,7 +9,7 @@
                 "__AVR_ATmega328P__",
                 "F_CPU=16000000"
             ],
-            "compilerPath": "/usr/bin/avr-gcc",
+            "compilerPath": "/usr/)",
             "cStandard": "c11",
             "cppStandard": "c++20",
             "intelliSenseMode": "clang-x64",

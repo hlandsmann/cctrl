@@ -15,9 +15,24 @@ namespace utl {
 
 namespace logger {
 
-enum class Base : uint8_t { bin = 2, oct = 8, dec = 10, hex = 16 };
+template <auto val> struct value_type_of {
+private:
+    using U = typename std::decay_t<decltype(val)>;
 
+public:
+    using value_type = U::value_type;
+};
+template <auto val> using value_type_of_t = value_type_of<val>::value_type;
 template <typename T> struct always_false : std::false_type {};
+
+template <class T>
+concept pointer = std::is_pointer_v<T>;
+
+template <size_t N> void consteval_error(const char (&str)[N]);
+template <typename T, std::array cmd> struct fmt_modi_for : std::false_type {};
+
+enum class Base : uint8_t { bin = 2, oct = 8, dec = 10, hex = 16 };
+enum class Case : bool { lower = false, upper = true };
 
 template <typename T>
 consteval auto getItoaStringLength(Base base) -> size_t requires(std::is_integral_v<T>) {
@@ -31,17 +46,26 @@ consteval auto getItoaStringLength(Base base) -> size_t requires(std::is_integra
     return result;
 }
 
-template <Base base> auto singleVal(uint8_t in) -> char requires(base == Base::hex) {
+template <Base, Case> auto singleVal(uint8_t);
+
+template <Base base, Case> auto singleVal(uint8_t in) -> char requires(base != Base::hex) {
+    return '0' + in;
+}
+
+template <> auto singleVal<Base::hex, Case::lower>(uint8_t in) {
     if (in < 10)
         return '0' + in;
     else
         return 'a' + (in - 10);
 }
-template <Base base> auto singleVal(uint8_t in) -> char requires(base != Base::hex) {
-    return '0' + in;
+template <> auto singleVal<Base::hex, Case::upper>(uint8_t in) {
+    if (in < 10)
+        return '0' + in;
+    else
+        return 'A' + (in - 10);
 }
 
-template <std::unsigned_integral Integral, Base base>
+template <std::unsigned_integral Integral, Base base, Case fmt_case>
 auto itoa(Integral value) -> std::array<char, getItoaStringLength<Integral>(base)> {
     std::array<char, getItoaStringLength<Integral>(base)> result;
     std::generate(result.rbegin(), result.rend(), [startVal = value]() mutable -> char {
@@ -51,22 +75,25 @@ auto itoa(Integral value) -> std::array<char, getItoaStringLength<Integral>(base
         }
         uint8_t intermediate = startVal % div;
         startVal /= div;
-        return singleVal<base>(intermediate);
+        return singleVal<base, fmt_case>(intermediate);
     });
 
     return result;
 }
 
-template <typename Integral, Base base>
+template <std::unsigned_integral Integral, Base base> auto itoa(Integral value) {
+    return itoa<Integral, base, Case::lower>(value);
+}
+
+template <std::signed_integral Integral, Base base>
 auto itoa(Integral value) -> std::array<char, getItoaStringLength<Integral>(base)>
-requires(std::is_integral_v<Integral>&& std::is_signed_v<Integral>&& base == Base::dec) {
+requires(base == Base::dec) {
     std::array<char, getItoaStringLength<Integral>(base)> result;
-    using CByte = typename std::conditional_t<std::is_signed_v<Integral>, int8_t, uint8_t>;
 
     bool put_minus = (value < 0);
 
     std::generate(result.rbegin(), result.rend(), [startVal = value, &put_minus]() mutable -> char {
-        constexpr CByte div = static_cast<CByte>(base);
+        constexpr int8_t div = static_cast<int8_t>(base);
 
         if (startVal == 0 && put_minus) {
             put_minus = false;
@@ -76,12 +103,12 @@ requires(std::is_integral_v<Integral>&& std::is_signed_v<Integral>&& base == Bas
             return 0;
         }
         char nextCharacter;
-        CByte intermediate = startVal % div;
+        int8_t intermediate = startVal % div;
         startVal /= div;
         if (intermediate < 0)
             intermediate *= -1;
 
-        nextCharacter = singleVal<base>(intermediate);
+        nextCharacter = singleVal<base, Case::lower>(intermediate);
 
         return nextCharacter;
     });
@@ -89,19 +116,26 @@ requires(std::is_integral_v<Integral>&& std::is_signed_v<Integral>&& base == Bas
     return result;
 }
 
+template <std::signed_integral Integral, Base base, Case fmt_case>
+auto itoa(Integral value) -> std::array<char, getItoaStringLength<std::make_unsigned_t<Integral>>(base)>
+requires(base != Base::dec && !std::is_pointer_v<Integral>) {
+    using UIntegral = typename std::make_unsigned<std::decay_t<Integral>>::type;
+    return itoa<UIntegral, base, fmt_case>(std::bit_cast<UIntegral>(value));
+}
 template <std::signed_integral Integral, Base base>
 auto itoa(Integral value) -> std::array<char, getItoaStringLength<std::make_unsigned_t<Integral>>(base)>
 requires(base != Base::dec) {
-    using UIntegral = typename std::make_unsigned<Integral>::type;
-    return itoa<UIntegral, base>(std::bit_cast<UIntegral>(value));
+    return itoa<Integral, base, Case::lower>(value);
 }
 
-template <class T>
-concept pointer = std::is_pointer_v<T>;
-
-template <pointer Ptr, Base base>
+template <pointer Ptr, Base base, Case fmt_case>
 auto itoa(Ptr value) -> std::array<char, getItoaStringLength<std::uintptr_t>(Base::hex)> {
-    return itoa<std::uintptr_t, Base::hex>(std::bit_cast<std::uintptr_t>(value));
+    return itoa<std::uintptr_t, base, fmt_case>(std::bit_cast<std::uintptr_t>(value));
+}
+
+// ToDo: compiler bug? this is not found...
+template <pointer Ptr, Base base> auto itoa(Ptr value) {
+    return itoa<Ptr, base, Case::lower>(value);
 }
 
 template <std::array arr> consteval auto bracket(char br, size_t begin = 0) -> size_t {
@@ -123,15 +157,6 @@ template <std::array arr, size_t begin = 0> consteval auto count_args(size_t cou
     }
     return count_args<arr, close + 1>(count + 1);
 }
-
-template <auto val> struct value_type_of {
-private:
-    using U = typename std::decay_t<decltype(val)>;
-
-public:
-    using value_type = U::value_type;
-};
-template <auto val> using value_type_of_t = value_type_of<val>::value_type;
 
 template <std::array arr, size_t first, size_t last>
 consteval auto subarray() -> std::array<value_type_of_t<arr>, last - first> {
@@ -185,60 +210,24 @@ template <size_t N> consteval auto array_from_str(const char (&str)[N]) -> std::
 }
 
 template <class ValueType, auto... modi> void printSingleValue(ValueType value) {
-    constexpr auto modi_tuple = std::make_tuple(modi...);
     using print_type = std::decay_t<ValueType>;
     const auto outputString = [&]() {
         if constexpr (std::is_integral_v<print_type> || std::is_pointer_v<print_type>)
-            return itoa<print_type, std::get<0>(modi_tuple)>(value);
+            return itoa<print_type, modi...>(value);
     }();
     Serial::tx(outputString);
 }
 
-template <size_t N> void consteval_error(const char (&str)[N]);
-
-template <typename T> struct fmt_modi_for : std::false_type {};
-template <std::integral Int> struct fmt_modi_for<Int> : std::true_type {
-    consteval auto operator()() {
-        return std::make_tuple(Base::dec);
-    }
-    template <size_t N> consteval auto operator()(std::array<char, N> fmt) {
-        std::string_view fmt_sv{fmt.begin(), fmt.end()};
-        if (fmt_sv == ":b")
-            return std::make_tuple(Base::bin);
-        else if (fmt_sv == ":d")
-            return std::make_tuple(Base::dec);
-        else if (fmt_sv == ":o")
-            return std::make_tuple(Base::oct);
-        else if (fmt_sv == ":x")
-            return std::make_tuple(Base::hex);
-        else
-            consteval_error("Only {:b}, {:d}, {:o}, {:x} is supported for Integral type");
-    }
-};
-
-template <pointer Ptr> struct fmt_modi_for<Ptr> : std::true_type {
-    consteval auto operator()() {
-        return std::make_tuple(Base::hex);
-    }
-    template <size_t N> consteval auto operator()(std::array<char, N> fmt) {
-        std::string_view fmt_sv{fmt.begin(), fmt.end()};
-        if (fmt_sv == ":x")
-            return std::make_tuple(Base::hex);
-        else
-            consteval_error("Only {:x} is supported for ptr type");
-    }
-};
-
 template <std::array cmd, typename T> consteval auto parse_cmd() {
     if constexpr (cmd.empty()) {
-        if constexpr (fmt_modi_for<T>::value) {
-            return fmt_modi_for<T>()();
+        if constexpr (fmt_modi_for<T, cmd>::value) {
+            return fmt_modi_for<T, cmd>()();
         } else {
             return std::make_tuple();
         }
     } else {
-        if constexpr (fmt_modi_for<T>::value) {
-            return fmt_modi_for<T>()(cmd);
+        if constexpr (fmt_modi_for<T, cmd>::value) {
+            return fmt_modi_for<T, cmd>()();
         } else {
             static_assert(always_false<T>::value, "no format command is known for type");
             return std::make_tuple();
@@ -247,10 +236,9 @@ template <std::array cmd, typename T> consteval auto parse_cmd() {
 }
 
 template <std::array rawStr, size_t N, typename... Args>
-void t(const std::array<char, N>& text, Args... args) {
+void print_valid_fmt(const std::array<char, N>& text, Args... args) {
     constexpr auto fmt_tuple = get_args<rawStr>();
     const auto arg_tuple = std::make_tuple(args...);
-
     uint8_t print_text_from = 0;
     [&]<size_t... I>(std::index_sequence<I...>) {
         (
@@ -262,13 +250,13 @@ void t(const std::array<char, N>& text, Args... args) {
                 constexpr auto modi = parse_cmd<cmd, std::decay_t<decltype(std::get<I>(arg_tuple))>>();
 
                 static_assert(N >= print_text_until);
-                if constexpr (print_text_until != 0 ) {
+                if constexpr (print_text_until != 0) {
                     Serial::tx(text.begin() + print_text_from, text.begin() + print_text_until, true);
                     print_text_from = print_text_until;
                 }
 
                 [&]<size_t... J>(std::index_sequence<J...>) {
-                    printSingleValue<Type, (std::get<J>(modi), ...)>(std::get<I>(arg_tuple));
+                    printSingleValue<Type, std::get<J>(modi)...>(std::get<I>(arg_tuple));
                 }
                 (std::make_index_sequence<std::tuple_size_v<decltype(modi)>>());
             }(),
@@ -284,8 +272,21 @@ void t(const std::array<char, N>& text, Args... args) {
         Serial::tx_p(text);
 }
 
-template <std::array format, typename... Args> void test_validity(Args...) {
-    static_assert(count_args<format>() == sizeof...(Args));
+template <std::array format, typename... Args> [[nodiscard]] constexpr auto valid_fmt(Args...) -> bool {
+    constexpr bool validated = (count_args<format>() == sizeof...(Args));
+    static_assert(validated, "Same number of '{}' needed as arguments!");
+    return validated; /* only true can be returned here! */
+}
+
+template <std::array rawStr, size_t N, typename... Args>
+void print_fmt(const std::array<char, N>& text, Args... args) {
+    constexpr size_t n_args = count_args<rawStr>();
+
+    static_assert(n_args == sizeof...(Args), "Same number of '{}' needed as arguments!");
+    if constexpr (n_args == sizeof...(Args)) {
+        print_valid_fmt<rawStr, N, Args...>(std::forward<decltype(text)>(text),
+                                            std::forward<Args>(args)...);
+    }
 }
 }  // namespace logger
 
@@ -296,8 +297,45 @@ template <std::array format, typename... Args> void test_validity(Args...) {
     [&] {                                                                       \
         namespace logger = utl::logger;                                         \
         constexpr auto format_array = logger::array_from_str(format);           \
-        logger::test_validity<format_array>(__VA_ARGS__);                       \
                                                                                 \
         static const auto log_str PROGMEM = logger::remove_fmt<format_array>(); \
-        logger::t<format_array>(log_str VA_ARGS(__VA_ARGS__));                  \
+        logger::print_fmt<format_array>(log_str VA_ARGS(__VA_ARGS__));          \
     }()
+
+namespace utl::logger {
+
+template <std::integral Int, std::array fmt> struct fmt_modi_for<Int, fmt> : std::true_type {
+    consteval auto operator()() {
+        constexpr std::string_view fmt_sv{fmt.begin(), fmt.end()};
+        if constexpr (fmt_sv.empty())
+            return std::make_tuple(Base::dec);
+        else if constexpr (fmt_sv == ":b")
+            return std::make_tuple(Base::bin);
+        else if constexpr (fmt_sv == ":d")
+            return std::make_tuple(Base::dec);
+        else if constexpr (fmt_sv == ":o")
+            return std::make_tuple(Base::oct);
+        else if constexpr (fmt_sv == ":x")
+            return std::make_tuple(Base::hex);
+        else if constexpr (fmt_sv == ":X")
+            return std::make_tuple(Base::hex, Case::upper);
+        else
+            consteval_error("Only {:b}, {:d}, {:o}, {:x} is supported for Integral type");
+    }
+};
+
+template <pointer Ptr, std::array fmt> struct fmt_modi_for<Ptr, fmt> : std::true_type {
+    consteval auto operator()() {
+        constexpr std::string_view fmt_sv{fmt.begin(), fmt.end()};
+        if constexpr (fmt_sv.empty())
+            return std::make_tuple(Base::hex, Case::upper);
+        else if constexpr (fmt_sv == ":x")
+            return std::make_tuple(Base::hex, Case::lower);
+        else if constexpr (fmt_sv == ":X")
+            return std::make_tuple(Base::hex, Case::upper);
+        else
+            consteval_error("Only {:x} is supported for ptr type");
+    }
+};
+
+}  // namespace utl::logger

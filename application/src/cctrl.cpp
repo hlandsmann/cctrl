@@ -14,31 +14,25 @@
 int main() {
     Serial::init();
     memman::initMemory();
-    static_assert(uint16_t(0x1010) == utl::BitPattern("---1------------"));
-    print("\n\r");
 
-    print("Hello World!\n\r");
+    print("Hello World! {:d}, {}\n\r", int8_t(-42), int16_t(-42));
 
-    print("Best Number: {}\n\r", 42);
-
-    // print("{}",42);
-    print("{:d}{}{}{}",42,42,42,42);
 
     while (Serial::tx_spaceLeft() < 60)
         ;
-    print("\n\r");
-    print("\n\r");
 
-    int *ptr = new int(2);
-    // int myvalue = 42;
-    print("val: \"{}\" bin: {:b}, dec: {:d}, {}\n\r", ptr, int(42), int(42), 2);
+    int *ptr = new int(42);
 
+    print("val: \"{}\" bin: {:b}, dec: {:d}\n\r", ptr, int16_t(42), int16_t(42));
+    print("I drink {:X}\n\r", 0xC0FFEE);
     for (int i = 0; i < 256; i++) {
         while (Serial::tx_spaceLeft() < 60)
             ;
         uint16_t *ptr = new uint16_t[10];
+        print("{:x}\n", ptr);
+
         if (ptr != nullptr) {
-            // print("\n\rPtr: {}", ptr);
+            print("\n\rPtr: {}", ptr);
 
         } else
             break;
@@ -49,11 +43,6 @@ int main() {
 
     while (true) {
         wdt_reset();
-        // toggle();
-        // if(TCNT0>250){
-        //     toggle();
-        //     TCNT0 = 0;
-        // }
     }
     return 0;
 }

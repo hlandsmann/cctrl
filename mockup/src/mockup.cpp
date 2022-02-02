@@ -29,8 +29,15 @@ namespace ranges = std::ranges;
 int main() {
     int *ptr = new int(2);
     int myvalue = 42;
-    print("val: \"{}\" bin: {:b}, dec: {:d}, {}\n", ptr, int(42), int(42), 2);
-    print("Hello world: \n");
+    using utl::logger::Base;
+    using utl::logger::Case;
+    // print("val: {:X}, {}, {:b}\n", 1, uint16_t (2), 3);
+    print("Hello World\n");
+    print("val: \"{:X}\" bin: {:b}, dec: {:d}, {}\n", ptr, int(42), int(42), 2);
+
+    // print("I drink {:x}\n\r", 0xc0ffee);
+    // utl::logger::printSingleValue<int*, Base::hex, Case::upper>(ptr);
+    // print("Hello world: \n");
     delete ptr;
     // print("hello world", uint(8), int(8));
     // print("\n");

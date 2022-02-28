@@ -1,15 +1,6 @@
 #define PROGMEM
 
 #include <utl/logger.h>
-#include <algorithm>
-#include <array>
-#include <cassert>
-#include <concepts>
-#include <iostream>
-#include <ranges>
-#include <string_view>
-
-namespace ranges = std::ranges;
 
 int main() {
     int *ptr = new int(2);

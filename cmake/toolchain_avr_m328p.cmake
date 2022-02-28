@@ -10,7 +10,7 @@ find_program(CMAKE_OBJDUMP avr-objdump)
 find_program(AVRSIZE avr-size)
 find_program(AVRDUDE avrdude)
 
-#ToDo: putting the avr includes that way, is probably not the best solution...
+#ToDo: putting the avr includes that way is probably not the best solution...
 set(AVR_INCLUDES "-I/usr/avr/include")
 
 set(GENERAL_FLAGS "-MMD -D__PROG_TYPES_COMPAT__")

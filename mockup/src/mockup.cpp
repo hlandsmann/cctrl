@@ -11,55 +11,17 @@
 
 namespace ranges = std::ranges;
 
-// void test() {
-//     constexpr auto mystr = array_from_str("val: \"{}\" hex: {:x}, dec: {:d}\n");
-//     std::string_view sv{mystr.begin(), mystr.end()};
-//     std::cout << sv << " - nargs: " << count_args<mystr>() << "\n";
-//     constexpr auto args = get_args<mystr>();
-
-//     std::cout << "Tuple size: " << std::tuple_size_v<decltype(args)> << "\n";
-
-//     constexpr auto no_fmt = remove_fmt<mystr>();
-//     std::string_view no_fmt_sv{no_fmt.begin(), no_fmt.end()};
-//     std::cout << "No FMT: " << no_fmt_sv;
-
-//     std::array<char, 5> testa;
-// }
-
 int main() {
     int *ptr = new int(2);
-    int myvalue = 42;
-    using utl::logger::Base;
-    using utl::logger::Case;
-    // print("val: {:X}, {}, {:b}\n", 1, uint16_t (2), 3);
+
     print("Hello World\n");
     print("val: \"{:X}\" bin: {:b}, dec: {:d}, {}\n", ptr, int(42), int(42), 2);
 
-    // print("I drink {:x}\n\r", 0xc0ffee);
-    // utl::logger::printSingleValue<int*, Base::hex, Case::upper>(ptr);
-    // print("Hello world: \n");
+    // These will not compile:
+    //print("Val: {}"); // static_assert(n_args == sizeof...(Args), "Same number of '{}' needed as arguments!");
+    //print("{:x \n", 42); // static_assert(bracket<arr>('{', open + 1) > close);
+    //print("{:d}", ptr); // consteval_error("Only {:x} is supported for ptr type");
     delete ptr;
-    // print("hello world", uint(8), int(8));
-    // print("\n");
 
-    // const char* ptr = "abc";
-    // print("pointer: ", ptr);
-    // print("\n\n");
-
-    // using Base = utl::logger::Base;
-    // // Serial::tx(utl::logger::itoa<uint16_t, Base::hex>(reinterpret_cast<uint16_t>(ptr)));
-    // uint8_t test = 10;
-    // utl::logger::printSingleValue<uint8_t, Base::dec>(test);
-    // print("\n");
-    // utl::logger::printSingleValue<uint8_t, Base::hex>(11);
-    // print("\n");
-    // utl::logger::printSingleValue<int8_t, Base::hex>(12);
-    // print("\n");
-    // utl::logger::printSingleValue<int16_t, Base::dec>(12);
-    // print("\n");
-    // utl::logger::printSingleValue<uint16_t, Base::dec>(13);
-    // print("\n");
-
-    // test();
     return 0;
 }

@@ -11,7 +11,6 @@ target_link_libraries(
         utl::utl
         serial::serial
         memman::memman
-        printf::printf
 )
 target_compile_features(cctrl.elf PRIVATE cxx_std_20)
 

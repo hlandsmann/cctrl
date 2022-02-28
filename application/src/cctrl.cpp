@@ -17,7 +17,6 @@ int main() {
 
     print("Hello World! {:d}, {}\n\r", int8_t(-42), int16_t(-42));
 
-
     while (Serial::tx_spaceLeft() < 60)
         ;
 
@@ -28,6 +27,8 @@ int main() {
     for (int i = 0; i < 256; i++) {
         while (Serial::tx_spaceLeft() < 60)
             ;
+
+        // just allocate memory - memory allocation should fail eventually...
         uint16_t *ptr = new uint16_t[10];
         print("{:x}\n", ptr);
 
@@ -37,9 +38,6 @@ int main() {
         } else
             break;
     }
-
-    constexpr uint8_t val = 0x20;
-    DDRB = DDRB | val;
 
     while (true) {
         wdt_reset();

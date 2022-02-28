@@ -15,7 +15,7 @@ cmake -B $build_dir \
     -DCMAKE_BUILD_TYPE=$mode
 (cd $build_dir; make -j$(nproc))
 
-build_dir=$workspace/build/mockup
+build_dir=$workspace/build/x86
 mkdir -p $build_dir
 mode="Debug"
 cmake -B $build_dir \
